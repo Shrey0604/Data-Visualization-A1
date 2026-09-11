@@ -1,0 +1,167 @@
+"""DAS732 A1 — Preprocessing pipeline for Reddit Top Posts (50 subreddits).
+
+Reproducible transformation: data/raw/ (50 untouched Kaggle CSVs)
+  -> data/processed/reddit_top_posts_clean.csv   (post-level analysis table)
+  -> data/processed/subreddit_summary.csv        (community-level aggregates)
+  -> data/processed/preprocessing_log.md         (documented decisions + counts)
+
+Documented decisions (see log for full rationale):
+  D1  Merge 50 files, keep provenance via source_file.
+  D2  Parse created_utc with two formats (AskReddit uses Excel M/D/YYYY H:MM).
+  D3  Drop num_awards (100% zeros), crosspost_subreddits (99.35% missing),
+      is_bot (8.53% missing, 28 True), is_megathread (21 True), body (82.79%
+      missing, title always present). No rows are dropped.
+  D4  Derive: year, era, month, hour_utc, title_len, is_question (title ends
+      with '?'), comments_per_upvote (cpi), domain_class, engagement metrics.
+  D5  Outliers: NONE removed. This is a curated all-time-top corpus; extreme
+      values are the phenomenon of interest. Log scales used for display.
+  D6  era bins chosen for comparable sample sizes given coverage skew.
+"""
+import os
+
+import numpy as np
+import pandas as pd
+
+HERE = os.path.dirname(__file__)
+RAW = os.path.join(HERE, "..", "data", "raw")
+OUT = os.path.join(HERE, "..", "data", "processed")
+
+DROP_COLS = ["num_awards", "crosspost_subreddits", "is_bot",
+             "is_megathread", "body"]
+
+
+def classify_domain(d: str) -> str:
+    """Coarse platform classifier for the link-hosting migration story."""
+    if pd.isna(d):
+        return "no link"
+    d = d.lower()
+    if d.startswith("self."):
+        return "self post"
+    if "redd.it" in d:
+        return "reddit-native"
+    if "imgur" in d:
+        return "imgur"
+    if "youtu" in d:
+        return "youtube"
+    if any(h in d for h in ("gfycat", "streamable", "vimeo", "twitch")):
+        return "other video hosts"
+    return "other external"
+
+
+def load_and_clean() -> pd.DataFrame:
+    files = [f for f in sorted(os.listdir(RAW)) if f.endswith(".csv")
+             and "50_subreddits_list" not in f]
+    frames = [pd.read_csv(os.path.join(RAW, f)).assign(source_file=f)
+              for f in files]
+    df = pd.concat(frames, ignore_index=True)
+
+    # D2 — dual-format date parsing
+    df["created_dt"] = pd.to_datetime(df["created_utc"], errors="coerce")
+    bad = df["created_dt"].isna()
+    df.loc[bad, "created_dt"] = pd.to_datetime(df.loc[bad, "created_utc"],
+                                               format="%m/%d/%Y %H:%M")
+    assert df["created_dt"].isna().sum() == 0
+
+    # D3 — column drops (documented, no row drops anywhere)
+    df = df.drop(columns=DROP_COLS)
+
+    # D4 — derived variables
+    df["year"] = df["created_dt"].dt.year.astype(int)
+    df["month"] = df["created_dt"].dt.month.astype(int)
+    df["hour_utc"] = df["created_dt"].dt.hour.astype(int)
+    df["era"] = pd.cut(df["year"], [2010, 2015, 2017, 2019, 2021, 2024],
+                       labels=["<=2015", "2016-17", "2018-19",
+                               "2020-21", "2022-24"])
+    df["title_len"] = df["title"].str.len().astype(int)
+    df["is_question"] = df["title"].str.strip().str.endswith("?")
+    df["cpi"] = df["num_comments"] / df["score"].clip(lower=1)
+    df["domain_class"] = df["domain"].map(classify_domain)
+    return df
+
+
+def subreddit_aggregates(df: pd.DataFrame) -> pd.DataFrame:
+    """Community-level table: one row per subreddit, medians for skewed vars."""
+    agg = (df.groupby("subreddit")
+             .agg(posts=("id", "count"),
+                  median_score=("score", "median"),
+                  p90_score=("score", lambda s: s.quantile(0.9)),
+                  median_comments=("num_comments", "median"),
+                  median_ratio=("upvote_ratio", "median"),
+                  median_cpi=("cpi", "median"),
+                  median_crossposts=("num_crossposts", "median"),
+                  median_title_len=("title_len", "median"),
+                  subscribers=("subscribers", "first"),
+                  pct_text=("post_type", lambda s: (s == "text").mean() * 100),
+                  pct_image=("post_type", lambda s: (s == "image").mean() * 100),
+                  pct_link=("post_type", lambda s: (s == "link").mean() * 100),
+                  pct_video=("post_type", lambda s: (s == "video").mean() * 100),
+                  first_post=("created_dt", "min"),
+                  last_post=("created_dt", "max"))
+             .reset_index())
+    agg["dominant_type"] = agg[["pct_text", "pct_image", "pct_link",
+                                "pct_video"]].idxmax(axis=1).str[4:]
+    return agg
+
+
+def main() -> None:
+    os.makedirs(OUT, exist_ok=True)
+    df = load_and_clean()
+    subs = subreddit_aggregates(df)
+
+    clean_path = os.path.join(OUT, "reddit_top_posts_clean.csv")
+    subs_path = os.path.join(OUT, "subreddit_summary.csv")
+    df.to_csv(clean_path, index=False)
+    subs.to_csv(subs_path, index=False)
+
+    lines = [
+        "# Preprocessing log (auto-generated by src/02_prepare.py)",
+        "",
+        f"- Raw rows merged from 50 files: **{len(df)}** (no rows dropped at any step)",
+        f"- Columns kept: {len(df.columns)}; dropped: {', '.join(DROP_COLS)}",
+        f"- Date parsing: {int((df['created_dt'].notna()).sum())}/{len(df)} parsed "
+        "(AskReddit's M/D/YYYY H:MM format handled separately)",
+        f"- Time range: {df['created_dt'].min()} to {df['created_dt'].max()} (UTC)",
+        f"- Duplicate post ids: {df['id'].duplicated().sum()}",
+        f"- Subreddits: {df['subreddit'].nunique()} "
+        f"(posts each: {subs['posts'].min()}-{subs['posts'].max()})",
+        "",
+        "## Dropped columns and why",
+        "- num_awards: 100% zeros (Reddit awards removed/migrated platform-wide "
+        "before collection) - no information.",
+        "- crosspost_subreddits: 99.35% missing.",
+        "- body: 82.79% missing (present only for some text posts); title is "
+        "always present and is the universal text surface.",
+        "- is_bot: 8.53% missing (archived posts), only 28 True of 45,063 known.",
+        "- is_megathread: 21 True of 49,266.",
+        "",
+        "## Derived variables",
+        "- year, era (5 bins chosen for comparable sample sizes), month, hour_utc",
+        "- title_len (chars), is_question (title ends with '?')",
+        "- cpi = num_comments / max(score,1) - comments generated per upvote; "
+        "medians used for aggregation because both inputs are heavily skewed",
+        "- domain_class: self post / reddit-native (i.redd.it, v.redd.it) / imgur / "
+        "youtube / other video hosts / other external / no link",
+        "",
+        "## Outlier policy",
+        "- No observations removed or winsorized. The corpus IS the top tail by "
+        "construction (top ~1000 all-time posts per subreddit); extreme values "
+        "are the object of study. Visualizations use log scales; aggregations "
+        "use medians.",
+        "",
+        "## Files written",
+        f"- {clean_path} ({len(df)} rows x {len(df.columns)} cols)",
+        f"- {subs_path} ({len(subs)} rows - one per subreddit)",
+    ]
+    with open(os.path.join(OUT, "preprocessing_log.md"), "w",
+              encoding="utf-8") as fh:
+        fh.write("\n".join(lines) + "\n")
+
+    print(f"clean: {df.shape} -> {clean_path}")
+    print(f"summary: {subs.shape} -> {subs_path}")
+    print("\ndomain_class distribution (%):")
+    print((df["domain_class"].value_counts(normalize=True) * 100).round(1).to_string())
+    print("\nquestion-titled posts: {:.1f}%".format(df["is_question"].mean() * 100))
+
+
+if __name__ == "__main__":
+    main()
