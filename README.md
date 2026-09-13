@@ -35,7 +35,9 @@ landscape behind these hits changed over time?*
 ├── report/
 │   ├── report.md                  # master report (source of truth)
 │   ├── report.docx                # submission-ready DOCX (figures embedded)
-│   ├── AI_Declaration_*.docx      # filled instructor-template forms (3 members)
+│   ├── AI_Declaration_*.docx      # filled instructor-template forms (3 members; do NOT regenerate — personalized)
+│   ├── DV_Assignment_1.pdf        # PDF export of the report
+│   └── report_ieee.tex            # IEEE LaTeX version of the report
 │   └── VIDEO_SCRIPT.md            # ≤5-minute video script with timings
 └── tableau/
     └── TABLEAU_SPEC.md            # step-by-step dashboard build + demo guide
@@ -71,9 +73,9 @@ deliberately.
 - [ ] Report: `report/report.docx` (with figures, captions, inferences,
       contributions, references) — review once, then freeze the folder
 - [ ] Code: `src/` (+ this README) — the Python submission component
-- [ ] Tableau workbook: build via `tableau/TABLEAU_SPEC.md`, publish to
-      Tableau Public, paste the URL here: ______________________
-      (and/or include the packaged `.twbx`)
+- [x] Tableau workbook: packaged `tableau/DV-A1.twbx` committed (built by
+      Parthsarathi per `tableau/TABLEAU_SPEC.md`) — optionally publish to
+      Tableau Public and paste the URL here: ______________________
 - [ ] Images folder: `images/` with README (extras documented as required)
 - [ ] AI declarations: each member reviews + signs their
       `report/AI_Declaration_<Name>.docx` (instructor template; adjust tool

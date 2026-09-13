@@ -3,8 +3,8 @@
 **Team:** Silica — Sidhanth Prabhu (BT2024027, team lead) · Shrey Modi (BT2024125) ·
 Parthsarathi Samanta (BT2024083)
 
-**Why this fits:** the script is ~490 words ≈ 3:45 at a natural pace (135 wpm).
-With figure transitions you should land at **4:15–4:30** — a deliberate buffer
+**Why this fits:** the script is ~525 words ≈ 3:45 at a natural pace (135 wpm).
+With figure transitions you should land at **4:25–4:40** — a deliberate buffer
 under the 5:00 cap. Rehearse once with a timer; if you run long, cut from the
 *optional* lines marked "(cut if tight)", never from the numbers.
 
@@ -13,7 +13,7 @@ screen at a time; each member records their own segment; the lead splices.
 
 ---
 
-## 0:00 – 0:50 — Sidhanth — dataset, question, preprocessing (first minute)
+## 0:00 – 1:00 — Sidhanth — dataset, question, preprocessing (first minute)
 
 > "Hi — we're Sidhanth, Shrey and Parthsarathi, Team Silica. Our dataset is
 > the all-time top thousand posts of Reddit's fifty largest subreddits —
@@ -29,12 +29,15 @@ screen at a time; each member records their own segment; the lead splices.
 > zeros — and kept every post. We derived the measure our story runs on:
 > **comments per thousand upvotes**, which we call discussion intensity,
 > plus creation eras and a media-hosting classifier. Medians and log scales
-> throughout. One caveat: this is a top-posts corpus, so we make no causal
-> claims — and recent posts haven't had time to accumulate upvotes."
+> throughout. **Figure 2** profiles a typical top post — median
+> thirty-nine thousand upvotes — and **Figure 3**: the price of fame
+> tripled, from thirteen thousand median in 2014 to forty-seven thousand at
+> the 2020 peak. One caveat: this is a top-posts corpus, so we make no
+> causal claims — and recent posts haven't had time to accumulate upvotes."
 
-**On screen:** Fig_01 while saying the caveat.
+**On screen:** Fig_01 → Fig_02 → Fig_03 across this segment.
 
-## 0:50 – 1:55 — Shrey — Task Set 2: comparing communities (Figs 4–8)
+## 1:00 – 2:05 — Shrey — Task Set 2: comparing communities (Figs 4–8)
 
 > "My task: comparing the fifty communities. **Figure 4** is our key result
 > — a spectrum spanning **forty-to-one** in comments per thousand upvotes:
@@ -51,7 +54,7 @@ screen at a time; each member records their own segment; the lead splices.
 > And **Figure 8**: styles persist across eras — rank correlations around
 > point-nine. These are durable identities, not phases."
 
-## 1:55 – 2:55 — Parthsarathi — Task Set 3: trends & relationships (Figs 9–12)
+## 2:05 – 3:05 — Parthsarathi — Task Set 3: trends & relationships (Figs 9–12)
 
 > "My task: time and relationships. **Figure 9**: links fell from half of
 > top posts to a third, images rose to around forty percent, video appears
@@ -66,7 +69,7 @@ screen at a time; each member records their own segment; the lead splices.
 > **Figure 12** — more comments come with *lower* upvote ratios: contested
 > posts are discussed posts. An association, not a cause."
 
-## 2:55 – 3:55 — Sidhanth (Figs 13–14) + Parthsarathi (Tableau demo)
+## 3:05 – 4:05 — Sidhanth (Figs 13–14) + Parthsarathi (Tableau demo)
 
 > Sidhanth: "My synthesis — **Figure 13**, the profile map. Even without
 > colours, the communities separate into visible bands, and a k-means
@@ -83,7 +86,7 @@ screen at a time; each member records their own segment; the lead splices.
 
 **On screen:** Fig_13 → Fig_14 → Tableau dashboard (live filtering, ~20s).
 
-## 3:55 – 4:20 — Sidhanth — conclusion
+## 4:05 – 4:30 — Sidhanth — conclusion
 
 > "To conclude: Reddit's biggest communities don't succeed one way — they
 > occupy stable niches: discussion spaces convert modest approval into
@@ -98,11 +101,11 @@ screen at a time; each member records their own segment; the lead splices.
 
 | Segment | Speaker | Target | Cumulative |
 |---|---|---|---|
-| Intro + preprocessing | Sidhanth | 50 s | 0:50 |
-| Community comparison | Shrey | 65 s | 1:55 |
-| Trends & relationships | Parthsarathi | 60 s | 2:55 |
-| Synthesis + Tableau demo | Sidhanth + Parthsarathi | 60 s | 3:55 |
-| Conclusion | Sidhanth | 25 s | 4:20 |
+| Intro + preprocessing + Figs 1–3 | Sidhanth | 60 s | 1:00 |
+| Community comparison | Shrey | 65 s | 2:05 |
+| Trends & relationships | Parthsarathi | 60 s | 3:05 |
+| Synthesis + Tableau demo | Sidhanth + Parthsarathi | 60 s | 4:05 |
+| Conclusion | Sidhanth | 25 s | 4:30 |
 
 ### Recording tips
 - One figure at a time; mouse-highlight exactly what is being said.

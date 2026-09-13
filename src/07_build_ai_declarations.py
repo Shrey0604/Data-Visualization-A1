@@ -8,9 +8,15 @@ the member's task ownership (report Section 9). Each member MUST review
 their copy — especially the tool names and the integrity declaration — and
 adjust it to their personal usage before signing.
 
-Run: python src/07_build_ai_declarations.py
+Run: python src/07_build_ai_declarations.py [--force]
+
+WARNING: the checked-in forms may have been personalized and signed by the
+members after generation. By default this script REFUSES to overwrite an
+existing declaration file; pass --force only if you intend to discard those
+edits and regenerate from the pre-filled templates.
 """
 import os
+import sys
 
 from docx import Document
 from docx.shared import Pt
@@ -270,7 +276,13 @@ def build_statement(member):
 
 
 def main():
+    force = "--force" in sys.argv
     for m in MEMBERS:
+        out = os.path.join(OUT_DIR, m["file"])
+        if os.path.exists(out) and not force:
+            print(f"SKIP {m['file']} (exists; use --force to overwrite — "
+                  f"the checked-in copy may be personalized/signed)")
+            continue
         build_statement(m)
 
 
