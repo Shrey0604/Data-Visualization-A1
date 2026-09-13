@@ -35,7 +35,6 @@ landscape behind these hits changed over time?*
 ├── report/
 │   ├── report.md                  # master report (source of truth)
 │   ├── report.docx                # submission-ready DOCX (figures embedded)
-│   ├── AI_declarations.md         # index of per-member AI declaration forms
 │   ├── AI_Declaration_*.docx      # filled instructor-template forms (3 members)
 │   └── VIDEO_SCRIPT.md            # ≤5-minute video script with timings
 └── tableau/
