@@ -1,0 +1,141 @@
+% Compile with pdfLaTeX. Keep this file at project root with images/.
+\documentclass[conference]{IEEEtran}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{microtype}
+\usepackage{capt-of}
+\usepackage{needspace}
+\usepackage[hidelinks]{hyperref}
+
+
+\title{Visual Exploration of Reddit's Top Communities\\
+How Engagement, Content Form, and Platform Hosting Changed from 2011 to 2024}
+
+\author{
+\IEEEauthorblockN{Sidhanth Prabhu, Shrey Modi, and Parthsarathi Samanta}
+\IEEEauthorblockA{
+DAS732 Data Visualization, Term 1 (2026--27)\\
+International Institute of Information Technology Bangalore\\
+\{BT2024027, BT2024125, BT2024083\}}
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We visually explore 49,266 all-time top posts from 50 of Reddit's largest communities, created between 2011 and 2024. We find a roughly 40-fold spectrum in comments per unit of approval: r/AskReddit produces far more conversation per upvote than visual entertainment feeds, and this style is stable across eras ($+0.85$ to $+0.92$ rank correlation). Upvotes and comments are only moderately related ($\rho=0.56$), while high-comment posts tend to have lower upvote ratios ($\rho=-0.45$). Successful content shifted from links and third-party hosts toward images, video, and Reddit-native hosting, and visual media travels across communities far more than text does. These results describe already successful posts; they do not establish causality.
+\end{abstract}
+
+\begin{IEEEkeywords}
+visual analytics, social media, Reddit, engagement, clustering, data visualization
+\end{IEEEkeywords}
+
+\section{Introduction}
+Reddit's topic-based communities can respond to successful posts in very different ways. A meme and a personal-finance question may both be highly upvoted, yet one may be consumed quickly while the other produces a long discussion. We ask: \emph{What does a decade of all-time top posts reveal about how Reddit's 50 largest communities generate engagement---who discusses versus who consumes, what media succeeds where, and how the content landscape behind these hits changed over time?}
+
+\section{Dataset and Preparation}
+We use the Kaggle Reddit Top Posts 50-Subreddit Analysis 2011--2024 dataset \cite{kaggle}. Each raw CSV contains approximately the top 1,000 posts by all-time net score from one community, collected through Reddit's API in September 2024. The merged corpus contains 49,266 posts from 50 communities, created from September 2011 to September 2024, with no duplicate post IDs and no missing values in the core engagement fields. The corpus contains only each community's successes, so it cannot establish causal determinants of success; recent posts have had less time to accumulate score, and subscriber counts are a September 2024 snapshot rather than a historical variable.
+
+We merge 50 raw files, parse a separate Excel-style date format used only by AskReddit's export, drop columns that carry no information (e.g., an awards field that is zero for every row and a crosspost-subreddits field that is 99.35\% missing), and derive temporal, text, and hosting-domain features. No rows are removed or winsorized: the corpus is the top tail by construction, so extreme values are the object of study rather than noise. Our central discussion-intensity measure is:
+\begin{equation}
+\mathrm{CPI}=\frac{\mathrm{num\_comments}}{\max(\mathrm{score},1)}.
+\end{equation}
+We report CPI as comments per 1,000 upvotes. Scores and comments are right-skewed, so comparisons use medians and figures use log scales; ranking communities by mean instead of median CPI gives a rank correlation of 0.99, so our comparisons are not artifacts of the aggregation choice.
+
+\section{Visualization Tasks}
+Following the task terminology of Schulz et al.\ \cite{schulz} (overview, trends, search, compare), we split the central question into three cohesive task sets, one per author. Task Set 1 covers data preparation, corpus overview, and synthesis. Task Set 2 compares communities through discussion intensity, fingerprints, engagement maps, and style persistence. Task Set 3 traces content and hosting migration, then examines relationships among score, comments, and consensus.
+
+\section{Corpus Overview and Community Comparison}
+
+% Controlled figure/text block. Figures are kept in the normal flow,
+% but the block can move to the next column/page only when necessary.
+\newcommand{\figtext}[5]{%
+\par\smallskip
+\begin{figure}[!t]
+\centering
+\includegraphics[width=#1,height=0.28\textheight,keepaspectratio]{#2}
+\caption{#3}\label{#4}
+\end{figure}
+\vspace{-2pt}
+#5\par\smallskip
+}
+
+\figtext{.72\columnwidth}{images/Fig_01.png}{Creation years of all-time top posts. The recent decline reflects limited accumulation time.}{fig:one}{%
+Figure~\ref{fig:one} shows uneven temporal coverage: only 778 posts predate 2016, the mass of the corpus sits in 2016--2021 (2020 alone contributes 11,493 posts), and counts fall after 2021 as recent posts have not had enough time to enter all-time lists.
+}
+
+\figtext{.70\columnwidth}{images/Fig_02.png}{Distributions of core engagement measures for 49,266 top posts. Medians: 39,192 upvotes; 1,121 comments; 0.92 upvote ratio; 31 comments per 1,000 upvotes.}{fig:two}{%
+Figure~\ref{fig:two} shows that a ``top post'' is not one kind of object: score and comments are heavily right-skewed while the upvote ratio is compressed near consensus, so medians and log scales are used throughout the rest of the paper.
+}
+
+\figtext{.70\columnwidth}{images/Fig_03.png}{Median top-post score by creation year, with the middle 50\% band.}{fig:three}{%
+The median score needed to appear in an all-time top list rose from 13,254 in 2014 to a peak of 47,450 in 2020, stayed near 45,000 through 2022, and then fell to 17,101 in 2024 (Figure~\ref{fig:three}); the final drop is an accumulation-time artifact, not a sign that Reddit's biggest hits are shrinking.
+}
+
+\figtext{.68\columnwidth}{images/Fig_04.png}{Engagement spectrum: median comments per 1,000 upvotes by subreddit.}{fig:four}{%
+\textbf{Figure 4---Engagement spectrum.} Figure~\ref{fig:four} reveals a wide consumption-to-discussion spectrum. r/AskReddit generates 230 comments per 1,000 upvotes, roughly 40 times the 5.7 of r/wholesomememes. Discussion-oriented communities turn approval into conversation, while visual feeds turn approval into rapid, low-comment consumption; the dominant post type of each subreddit tracks this spectrum almost perfectly.
+}
+
+\figtext{.68\columnwidth}{images/Fig_05.png}{Post-type composition of each community's top posts.}{fig:five}{%
+\textbf{Figure 5---Content geometry.} Figure~\ref{fig:five} shows that this contrast is structural: advice and Q\&A communities such as r/AskReddit and r/personalfinance are nearly all text, visual feeds such as r/wholesomememes and r/DIY are predominantly image-based (over 90\%), and news communities are link-heavy. Content form is the substrate for the styles shown in Figure~\ref{fig:four}.
+}
+
+\figtext{.74\columnwidth}{images/Fig_06.png}{Seven-metric engagement fingerprints. Values are z-scores relative to the 50-community average.}{fig:six}{%
+\textbf{Figure 6---Engagement fingerprints.} Figure~\ref{fig:six} combines approval, participation, consensus, spread, and content composition. It exposes a scale--intensity trade-off: the median top post across our eight most discussion-heavy communities scores around 16{,}000 upvotes, versus roughly 100{,}000 in the ten most image-heavy communities---a nearly six-fold gap---while image communities generate proportionally fewer comments per unit of approval.
+}
+
+\figtext{.74\columnwidth}{images/Fig_07.png}{Engagement map. Each bubble is a community; size encodes 2024 subscriber count.}{fig:seven}{%
+\textbf{Figure 7---Engagement map.} Figure~\ref{fig:seven} places all 50 communities by median score and discussion intensity. r/AskReddit is a distinctive high-score, high-discussion outlier (63 million subscribers, median top score 66,000, 230 comments per 1,000 upvotes)---no other mega-community converts audience size into conversation at a comparable rate. Large communities occur at both ends of the discussion axis, so subscriber count alone does not explain engagement style; it is context, not a temporal variable, since it is only a 2024 snapshot.
+}
+
+\figtext{.74\columnwidth}{images/Fig_08.png}{Discussion intensity by community and creation era; cells based on fewer than five posts are blank.}{fig:eight}{%
+\textbf{Figure 8---Style persistence.} In Figure~\ref{fig:eight}, era-level discussion-intensity ranks correlate $+0.85$ to $+0.92$ with the overall rank. The spectrum is therefore not an artifact of combining historical periods: communities retain recognizable engagement styles even as the platform changed around them.
+}
+
+\section{Media Shift and Relationships}
+
+\figtext{.74\columnwidth}{images/Fig_09.png}{Share of top posts by content type and year.}{fig:nine}{%
+Links represented 46--53\% of top posts from 2014--17 but fell to roughly 35\% by 2019--24; images rose from 10.7\% in 2014 to 39.8\% in 2024, video appeared only after 2017, and self-text held a fairly steady 25--30\% share until 2021 before drifting down to about 20\%.
+}
+
+\figtext{.74\columnwidth}{images/Fig_10.png}{Hosting-platform migration among top posts.}{fig:ten}{%
+Imgur---once Reddit's de-facto image host---fell from 19.6\% of top posts in 2015 to near zero, while Reddit-native hosting (i.redd.it / v.redd.it) rose from 0\% to 45.1\% by 2024 and YouTube's share fell from roughly 11\% to 1.4\%. The timing aligns with Reddit's 2016 native image-hosting beta \cite{redditimage} and 2017 video launch \cite{redditvideo}, anchoring the migration in externally verifiable platform events.
+
+Media also travels unevenly: video posts have a median of 18 crossposts and images 7, versus just 1 for text posts, and crossposts correlate with score ($\rho=0.65$)---spread across communities is predominantly a media phenomenon, not a text one.
+}
+
+\figtext{.74\columnwidth}{images/Fig_11.png}{Score versus comments for a 15,000-post sample.}{fig:eleven}{%
+At any score level, comments span two orders of magnitude and text posts dominate the high-comment region (Figure~\ref{fig:eleven}): a 100{,}000-upvote meme and a 20{,}000-upvote AskReddit thread are both top posts, but they represent different kinds of success.
+}
+
+\figtext{.74\columnwidth}{images/Fig_12.png}{Posts with more comments tend to have lower upvote ratios.}{fig:twelve}{%
+Contested top posts are more discussed---the most unanimous communities (travel, anime; upvote ratio 0.97--0.98) are low-discussion feeds, while the most contested (IAmA, 0.83) are conversation spaces (Figure~\ref{fig:twelve})---but these observational correlations are not causal.
+}
+
+\section{Synthesis and Limitations}
+
+\figtext{.74\columnwidth}{images/Fig_13.png}{Profile map of 50 communities. Color summarizes a five-profile k-means solution.}{fig:thirteen}{%
+For Figure~\ref{fig:thirteen}, we standardize log discussion intensity, log median score, median upvote ratio, image share, and text share. We assess $k=2$ through $8$ and select $k=5$ (silhouette 0.354): the highest-silhouette partition in which all but at most one profile contain at least six communities, an allowance needed only because r/AskReddit is structurally alone. Its mean adjusted Rand index across 19 non-reference seeds is 0.88, so the grouping is stable, though it summarizes visible structure along content form and engagement mode rather than establishing a validated taxonomy: AskReddit alone; 17 visual entertainment feeds; 12 advice and Q\&A text communities; 14 news and media link hubs; and 6 smaller-scale niche communities.
+}
+
+\figtext{.62\columnwidth}{images/Fig_14.png}{Age composition of each community's all-time top-post list.}{fig:fourteen}{%
+Communities also have different replacement rates for all-time lists: 36.3\% of r/Art's and 33.0\% of r/technology's top posts are from 2022--24, compared with just 0.5\% for r/WritingPrompts and 1.7\% for r/listentothis. Because every community faces the same accumulation clock (Figure~\ref{fig:one}), this reflects how quickly each community's recent output displaces its own classics rather than any absolute difference in freshness.
+
+This work observes only all-time top posts, not ordinary Reddit activity, so no claim is made about what makes a post succeed in the first place. Recent posts have less time to accumulate score, subscriber counts are a single-time snapshot, timestamps are UTC (so we do not analyze hour-of-day patterns, which would confound time zones), and all reported associations are rank correlations on observational data.
+}
+
+\section*{Author Contributions}
+Sidhanth Prabhu led data preparation, corpus overview (Figures 1--3), and synthesis (Figures 13--14, including the k-selection analysis). Shrey Modi led cross-community comparison and Figures 4--8. Parthsarathi Samanta led temporal and relationship analysis, Figures 9--12, and external verification of the platform-launch dates. All members jointly selected the research question and tasks, reviewed candidate figures, developed the narrative, and edited the report.
+
+\begin{thebibliography}{00}
+\bibitem{kaggle} S. Kanchan, Reddit Top Posts 50-Subreddit Analysis 2011--2024, Kaggle dataset, 2024. [Online]. Available: \url{https://www.kaggle.com/datasets/sachinkanchan92/reddit-top-posts-50-subreddit-analysis-2011-2024}
+\bibitem{redditimage} Reddit, Introducing image uploading beta, r/changelog, 2016. [Online]. Available: \url{https://www.reddit.com/r/changelog/comments/4kuk2j/}
+\bibitem{redditvideo} TechCrunch, Reddit rolls out its own video platform, Aug. 17, 2017. [Online]. Available: \url{https://techcrunch.com/2017/08/17/reddit-rolls-out-its-own-video-platform/}
+\bibitem{schulz} H. J. Schulz, T. Nocke, M. Heitzler, and H. Schumann, A design space of visualization tasks, \emph{IEEE Transactions on Visualization and Computer Graphics}, vol. 19, no. 12, pp. 2366--2375, 2013.
+\end{thebibliography}
+
+\end{document}
