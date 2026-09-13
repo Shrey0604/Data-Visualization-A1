@@ -23,7 +23,7 @@ PROC = os.path.join(HERE, "..", "data", "processed")
 IMG = os.path.join(HERE, "..", "exploration", "candidates")
 os.makedirs(IMG, exist_ok=True)
 # palettes and era labels come from the shared config (single source of truth)
-from config import ERA_LABELS as ERAS, OI, PT_COLORS
+from config import (ERA_LABELS as ERAS, N_INIT, OI, PT_COLORS, RANDOM_STATE)
 
 mpl.rcParams.update({
     "figure.dpi": 100, "savefig.dpi": 200, "font.size": 10,
@@ -391,7 +391,7 @@ def c18_clusters():
     from vizutils import profile_features, select_k
     Z = profile_features(subs)
     best = select_k(Z)
-    km = KMeans(best, n_init=10, random_state=0).fit(Z)
+    km = KMeans(best, n_init=N_INIT, random_state=RANDOM_STATE).fit(Z)
     subs["cluster"] = km.labels_.astype(str)
     print(f"k={best}, silhouette={silhouette_score(Z, km.labels_):.3f}")
     for c in sorted(subs.cluster.unique()):

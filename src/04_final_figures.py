@@ -36,7 +36,8 @@ CAND = os.path.join(HERE, "..", "exploration", "candidates")
 os.makedirs(EXTRAS, exist_ok=True)
 
 # palettes, era labels and era colours come from the shared config
-from config import ERA_COLORS, ERA_LABELS as ERAS, OI, PT_COLORS
+from config import (ERA_COLORS, ERA_LABELS as ERAS, N_INIT, OI, PT_COLORS,
+                    RANDOM_STATE)
 
 mpl.rcParams.update({
     "figure.dpi": 100, "savefig.dpi": 200, "font.size": 10.5,
@@ -372,7 +373,7 @@ def fig13_profiles():
     feats = ["median_cpi", "median_ratio", "median_score", "pct_image", "pct_text"]
     Z = profile_features(subs)
     best = select_k(Z)
-    km = KMeans(best, n_init=10, random_state=0).fit(Z)
+    km = KMeans(best, n_init=N_INIT, random_state=RANDOM_STATE).fit(Z)
     subs["cluster"] = km.labels_.astype(str)
 
     def name_cluster(row):
