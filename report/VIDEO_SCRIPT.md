@@ -85,7 +85,7 @@ read verbatim — but hit every beat and every number.
 
 **On screen:** Fig_09 → Fig_10 → Fig_11 → Fig_12.
 
-## 3:25 – 4:20 — Sidhanth (+ Shrey for the Tableau demo) — *synthesis + Tableau demo*
+## 3:25 – 4:20 — Sidhanth (+ Parthsarathi for the Tableau demo) — *synthesis + Tableau demo*
 
 > Sidhanth: "Pulling it together — my synthesis task. Figure 13 is the
 > profile map: read the geometry first. Even without colours, the
@@ -101,7 +101,7 @@ read verbatim — but hit every beat and every number.
 > Figure 14: all-time lists age differently — over a third of r/Art's top
 > posts are from 2022-24, versus half a percent for r/WritingPrompts."
 >
-> Shrey: "We also built the same analysis as an interactive Tableau
+> Parthsarathi: "I built the same analysis as an interactive Tableau
 > dashboard. Filtering to a single community — say memes versus AskReddit —
 > you can see the two engagement currencies separate live. And switching
 > the era filter shows the coverage caveat we flagged earlier,
@@ -131,7 +131,7 @@ read verbatim — but hit every beat and every number.
 | Intro + preprocessing | Sidhanth | 55 s | 0:55 |
 | Community comparison | Shrey | 80 s | 2:15 |
 | Trends & relationships | Parthsarathi | 70 s | 3:25 |
-| Synthesis + Tableau demo | Sidhanth + Shrey | 55 s | 4:20 |
+| Synthesis + Tableau demo | Sidhanth + Parthsarathi | 55 s | 4:20 |
 | Conclusion | Sidhanth | 30 s | 4:50 |
 
 ### Recording tips

@@ -221,22 +221,25 @@ For the analyst, the practical answer to our question is: **measure engagement i
 | Member | Contribution |
 |---|---|
 | **Sidhanth Prabhu (BT2024027)** — team lead | Data preparation pipeline (merging 50 files, dual-format date parsing, column triage, derived variables `cpi`, `era`, `domain_class`; preprocessing log); Task Set 1: corpus overview (Figures 1–3) and synthesis (Figures 13–14: profile map with the k-selection analysis in Appendix C, age of lists); findings F5, F8; co-authored F6; dataset description section; video: preprocessing walkthrough (first minute), synthesis segment, and conclusion. |
-| **Shrey Modi (BT2024125)** | Task Set 2 (community comparison): derived the discussion-intensity measure, built Figures 4–8 (spectrum, content geometry, fingerprint heatmap, engagement map, style-persistence heatmap); findings F1–F3; co-authored F6; video segment on community comparison; Tableau dashboard co-demo. |
-| **Parthsarathi Samanta (BT2024083)** | Task Set 3 (trends & relationships): platform/domain classification, Figures 9–12 (media shift, hosting migration, score-vs-comments, ratio-vs-comments); external verification of the platform-launch dates; findings F4, F7; video segment on trends and relationships. |
+| **Shrey Modi (BT2024125)** | Task Set 2 (community comparison): derived the discussion-intensity measure, built Figures 4–8 (spectrum, content geometry, fingerprint heatmap, engagement map, style-persistence heatmap); findings F1–F3; co-authored F6; video segment on community comparison. |
+| **Parthsarathi Samanta (BT2024083)** | Task Set 3 (trends & relationships): platform/domain classification, Figures 9–12 (media shift, hosting migration, score-vs-comments, ratio-vs-comments); external verification of the platform-launch dates; findings F4, F7; **built the Tableau dashboard ("Reddit Engagement Explorer") from the team's workbook specification and demonstrates it in the video**; video segment on trends and relationships. |
 
 All members jointly: research question selection, task decomposition, candidate-figure review and final selection, narrative construction, report editing, and AI-declaration accuracy.
 
 ## 10. AI Declaration
 
-Each team member submits a separate, honestly completed declaration; the
-fillable forms are in `report/AI_declarations.md` (one per member:
-Sidhanth Prabhu, Shrey Modi, Parthsarathi Samanta). The declarations must
-reflect each member's actual AI usage. As a team-level statement: AI tools
-assisted with code scaffolding, figure generation, and drafting; every
-statistic, figure, and external fact cited in this report was computed or
-verified by the team against the actual dataset and primary sources, and is
-reproducible via `src/`. No data, results, or citations were fabricated.
-
+Each team member submits a separate, honestly completed declaration using the
+instructor's template (`DAS732-T1-26-27-AI-Disclosure-Statement.docx`). The
+filled forms are `report/AI_Declaration_Sidhanth_Prabhu.docx`,
+`report/AI_Declaration_Shrey_Modi.docx`, and
+`report/AI_Declaration_Parthsarathi_Samanta.docx` (regenerable via
+`src/07_build_ai_declarations.py`; each member must review their copy and
+adjust tool names to their personal usage before signing). As a team-level
+statement: AI tools assisted with code scaffolding, figure generation, and
+drafting; every statistic, figure, and external fact cited in this report
+was computed or verified by the team against the actual dataset and primary
+sources, and is reproducible via `src/`. No data, results, or citations were
+fabricated.
 
 ## 11. References
 

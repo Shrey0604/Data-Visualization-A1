@@ -35,7 +35,8 @@ landscape behind these hits changed over time?*
 ├── report/
 │   ├── report.md                  # master report (source of truth)
 │   ├── report.docx                # submission-ready DOCX (figures embedded)
-│   ├── AI_declarations.md         # per-member AI declaration forms (fill + sign)
+│   ├── AI_declarations.md         # index of per-member AI declaration forms
+│   ├── AI_Declaration_*.docx      # filled instructor-template forms (3 members)
 │   └── VIDEO_SCRIPT.md            # ≤5-minute video script with timings
 └── tableau/
     └── TABLEAU_SPEC.md            # step-by-step dashboard build + demo guide
@@ -75,8 +76,9 @@ deliberately.
       Tableau Public, paste the URL here: ______________________
       (and/or include the packaged `.twbx`)
 - [ ] Images folder: `images/` with README (extras documented as required)
-- [ ] AI declarations: each member completes + signs their form in
-      `report/AI_declarations.md` (or its PDF/print version)
+- [ ] AI declarations: each member reviews + signs their
+      `report/AI_Declaration_<Name>.docx` (instructor template; adjust tool
+      names to personal usage first)
 - [ ] Video: record per `report/VIDEO_SCRIPT.md` (≤ 5 minutes)
 - [ ] Contributions table in report Section 9 filled with real names/tasks
 - [ ] Upload to the course drive; **do not edit any file after submission**
