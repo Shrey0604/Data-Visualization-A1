@@ -3,7 +3,9 @@
 **DAS732: Data Visualization — Term 1 (2026–27) — Programming Assignment 1**
 
 **Team:** Silica
+
 **Members:** Sidhanth Prabhu (BT2024027, team lead) · Shrey Modi (BT2024125) · Parthsarathi Samanta (BT2024083)
+
 **Date:** September 2026
 
 ---
@@ -153,9 +155,9 @@ We generated 17 candidate visualizations and selected 14 for the story (selectio
 
 ### 5.4 Synthesis: profiles and the age of fame (Member A — integrating Task Sets 2 and 3)
 
-![**Figure 13.** The profile map: each dot is one subreddit, positioned by discussion intensity (x) and image share (y); colours show five engagement profiles summarised by k-means (k = 5; selection rationale and stability in Appendix C).](../images/Fig_13.png)
+![**Figure 13.** The profile map: each dot is one subreddit, positioned by discussion intensity (x) and image share (y); colours show five engagement profiles summarised by k-means (k = 5; selection rule, table and stability in Appendix C).](../images/Fig_13.png)
 
-**What it shows.** Read the geometry first: even without the colouring, the 50 communities separate into visible bands along the two axes — image-heavy feeds along the top, text communities along the bottom, and AskReddit isolated at the far right. Colouring each dot by a k-means grouping (k = 5, chosen where the silhouette curve stops improving without fragmenting into singleton clusters — Appendix C) labels five interpretable profiles: **AskReddit alone** (text Q&A giant); **visual entertainment feeds** (17 communities: memes, aww, pics, funny, food, …); **advice & Q&A text communities** (12: personalfinance, relationship_advice, askscience, explainlikeimfive, tifu, …); **news & media link hubs** (14: worldnews, news, movies, technology, …); and **niche interest communities** with smaller score scales (6: history, Documentaries, travel, listentothis, anime, InternetIsBeautiful). **Why it matters.** The grouping is a *summary of visible structure*, not a discovery claim: the axes — content form × engagement mode — do the organising, and the clustering merely attaches labels to what the scatter already shows. The solution is stable across random seeds (mean adjusted Rand index 0.88). **Interpretation.** Reddit's largest communities occupy a small number of engagement niches; the axes of differentiation are *content form* and *engagement mode*, not community size.
+**What it shows.** Read the geometry first: even without the colouring, the 50 communities separate into visible bands along the two axes — image-heavy feeds along the top, text communities along the bottom, and AskReddit isolated at the far right. Colouring each dot by a k-means grouping (k = 5 — the highest-silhouette partition in which all but at most one profile contains at least six of the 50 communities; full table in Appendix C) labels five interpretable profiles: **AskReddit alone** (text Q&A giant); **visual entertainment feeds** (17 communities: memes, aww, pics, funny, food, …); **advice & Q&A text communities** (12: personalfinance, relationship_advice, askscience, explainlikeimfive, tifu, …); **news & media link hubs** (14: worldnews, news, movies, technology, …); and **niche interest communities** with smaller score scales (6: history, Documentaries, travel, listentothis, anime, InternetIsBeautiful). **Why it matters.** The grouping is a *summary of visible structure*, not a discovery claim: the axes — content form × engagement mode — do the organising, and the clustering merely attaches labels to what the scatter already shows. The solution is stable across random seeds (mean adjusted Rand index 0.88). **Interpretation.** Reddit's largest communities occupy a small number of engagement niches; the axes of differentiation are *content form* and *engagement mode*, not community size.
 
 ![**Figure 14.** How old is each community's all-time list? Share of each subreddit's top posts created in each era (100% stacked, sorted by 2022–24 share).](../images/Fig_14.png)
 
@@ -256,9 +258,7 @@ Seventeen candidate visualizations were generated; fourteen appear above. The th
 
 ## Appendix C — Choosing k for the profile map (Figure 13)
 
-We standardised five community-level features (log discussion intensity, log
-median score, median upvote ratio, image share, text share) and ran k-means
-for k = 2…8 (10 restarts each):
+We standardised five community-level features (log discussion intensity, log median score, median upvote ratio, image share, text share) and ran k-means for k = 2…8 (10 restarts each). This appendix is reproducible: `src/06_k_selection.py` regenerates the table and the stability statistic below, writing them to `data/processed/k_selection.csv`, and the same selection rule (in `src/vizutils.py`) is what Figure 13 uses.
 
 | k | Silhouette | Cluster sizes |
 |---|---|---|
@@ -270,11 +270,6 @@ for k = 2…8 (10 restarts each):
 | 7 | 0.404 | 6, 15, 17, 4, 6, 1, 1 |
 | 8 | 0.385 | 4, 10, 7, 4, 15, 2, 2, 6 |
 
-k = 5 is the most detailed partition before further gains in silhouette come
-only from isolating additional outliers as singleton or near-singleton
-clusters (k = 6–7 carve out extra singletons beyond the structural outlier
-AskReddit, which is already alone at k = 5). At k = 5 the four remaining
-groups are well populated (6–17 members each) and interpretable. The k = 5
-solution is stable across random seeds (mean adjusted Rand index 0.88 over
-19 seeds). We therefore use the clustering as a *labelling of visually
-evident structure* in Figure 13, not as a claim of true cluster structure.
+**Selection rule (implemented in `src/vizutils.select_k`).** Among k = 2…8, we keep the partitions in which all but at most one profile contains at least six of the 50 communities (≥ 12%) — the single allowance covers the structural outlier AskReddit, which is alone at k = 5 already — and take the highest silhouette among those. This selects k = 5: k = 6 scores a higher silhouette (0.389) only by splitting the coherent advice & Q&A profile into fragments of 5 and 6, which the rule disallows; k = 7–8 fragment further into singletons and pairs.
+
+At k = 5 the five profiles are interpretable and four of them are well populated (6–17 members each). The k = 5 solution is stable across random seeds: re-running k-means under 19 different seeds and comparing each result to the reference solution gives a mean adjusted Rand index of 0.88. We therefore use the clustering as a *labelling of visually evident structure* in Figure 13, not as a claim of true cluster structure.

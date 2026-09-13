@@ -1,6 +1,7 @@
 """DAS732 A1 — Candidate visualizations (exploration phase).
 
-Generates ~19 candidate figures into exploration/candidates/ and prints the
+Generates the 17 candidate figures (contiguous IDs C01-C17) into
+exploration/candidates/ and prints the
 statistics behind each figure so every claimed pattern is verifiable.
 Figure quality here is exploratory; selected figures get report polish later.
 """
@@ -21,14 +22,8 @@ HERE = os.path.dirname(__file__)
 PROC = os.path.join(HERE, "..", "data", "processed")
 IMG = os.path.join(HERE, "..", "exploration", "candidates")
 os.makedirs(IMG, exist_ok=True)
-
-# Okabe-Ito colorblind-safe palette
-OI = {"blue": "#0072B2", "orange": "#E69F00", "green": "#009E73",
-      "verm": "#D55E00", "purple": "#CC79A7", "sky": "#56B4E9",
-      "yellow": "#F0E442", "black": "#000000", "grey": "#7F7F7F"}
-PT_COLORS = {"image": OI["blue"], "link": OI["orange"],
-             "text": OI["green"], "video": OI["verm"]}
-ERAS = ["<=2015", "2016-17", "2018-19", "2020-21", "2022-24"]
+# palettes and era labels come from the shared config (single source of truth)
+from config import ERA_LABELS as ERAS, OI, PT_COLORS
 
 mpl.rcParams.update({
     "figure.dpi": 100, "savefig.dpi": 200, "font.size": 10,
@@ -141,7 +136,7 @@ def c05_cpi_ranking():
     handles = [Line2D([], [], marker="s", ls="", color=c, label=f"{t} posts dominant")
                for t, c in PT_COLORS.items()]
     ax.legend(handles=handles, frameon=False, fontsize=9, loc="lower right")
-    save(fig, "C05_cpi_ranking.png")
+    save(fig, "C04_cpi_ranking.png")
     print(d[["rname", "median_cpi"]].head(3).to_string())
     print(d[["rname", "median_cpi"]].tail(3).to_string())
 
@@ -159,7 +154,7 @@ def c06_fingerprint_heatmap():
     ax.set_yticks(range(len(labels)), labels, fontsize=9)
     ax.set_title("Engagement fingerprints of 50 subreddits (z-scores; red = high, blue = low)", pad=12)
     fig.colorbar(im, ax=ax, shrink=0.85, label="z-score within 50 subreddits")
-    save(fig, "C06_fingerprint_heatmap.png")
+    save(fig, "C05_fingerprint_heatmap.png")
 
 
 def c07_bubble():
@@ -193,7 +188,7 @@ def c07_bubble():
     ax.set(title="The engagement map of Reddit's top communities",
            xlabel="Median comments per upvote (log) — discussion intensity",
            ylabel="Median top-post score (log) — approval scale")
-    save(fig, "C07_bubble.png")
+    save(fig, "C06_bubble.png")
     print("upper-right (high score, high discussion):",
           d[(np.log10(d.median_cpi) > -1.1) & (np.log10(d.median_score) > 4.6)]["subreddit"].tolist())
     print("lower-right consumers (high score, low discussion):",
@@ -211,7 +206,7 @@ def c08_type_mix():
            xlabel="Share of the subreddit's top posts (%)")
     ax.set_xlim(0, 100)
     ax.legend(frameon=False, ncol=4, fontsize=9, loc="lower right", title="Post type")
-    save(fig, "C08_type_mix.png")
+    save(fig, "C07_type_mix.png")
     print(d[["rname", "pct_text", "pct_image", "pct_link", "pct_video"]].head(4).to_string())
 
 
@@ -231,7 +226,7 @@ def c09_ratio_boxes():
     ax.set_xticklabels([f"r/{s}" for s in sel_sorted], rotation=40, ha="right", fontsize=9)
     ax.set(title="Consensus on top posts: upvote-ratio spread for the 6 most contested\nand 6 most unanimous subreddits",
            ylabel="Upvote ratio (share of upvotes among all votes)")
-    save(fig, "C09_ratio_boxes.png")
+    save(fig, "C08_ratio_boxes.png")
     print(subs.set_index("subreddit").loc[sel_sorted, "median_ratio"].to_string())
 
 
@@ -247,7 +242,7 @@ def c10_type_share_time():
            xlabel="Year of post creation", ylabel="Share of top posts (%)",
            xlim=(2014, 2024), ylim=(0, 100))
     ax.legend(frameon=False, ncol=4, fontsize=9, loc="lower left")
-    save(fig, "C10_type_share_time.png")
+    save(fig, "C09_type_share_time.png")
     print(share.round(1).to_string())
 
 
@@ -270,16 +265,21 @@ def c11_domain_migration():
            xlabel="Year of post creation", ylabel="Share of top posts (%)",
            xlim=(2014, 2024))
     ax.legend(frameon=False, fontsize=9)
-    save(fig, "C11_domain_migration.png")
+    save(fig, "C10_domain_migration.png")
     print(share[focus].round(1).to_string())
 
 
 def c13_cpi_heatmap():
+    counts = (df.groupby(["subreddit", "era"], observed=True).size()
+                .unstack(fill_value=0))
     piv = (df.groupby(["subreddit", "era"], observed=True)["cpi"]
              .median().unstack())
     piv = piv.reindex(columns=[e for e in ERAS if e in piv.columns])
     order = subs.sort_values("median_cpi", ascending=False)["subreddit"]
     piv = piv.loc[order]
+    # blank out cells backed by fewer than 5 top posts (legend honesty)
+    from vizutils import mask_small_groups
+    piv = mask_small_groups(piv, counts, min_n=5)
     logv = np.log10(piv)
     fig, ax = plt.subplots(figsize=(8.6, 13))
     im = ax.imshow(logv, cmap="viridis", aspect="auto")
@@ -291,13 +291,11 @@ def c13_cpi_heatmap():
             if not np.isnan(v):
                 ax.text(j, i, f"{v:.2f}", ha="center", va="center", fontsize=6.8,
                         color="white" if logv.iloc[i, j] < np.nanpercentile(logv, 55) else "black")
-    ax.set_title("Is engagement style stable? Comments per upvote by subreddit and era", pad=12)
+    ax.set_title("Is engagement style stable? Comments per upvote by subreddit and era\n(blank = fewer than 5 top posts)", pad=12)
     fig.colorbar(im, ax=ax, shrink=0.6, label="log10(comments per upvote)")
-    save(fig, "C13_cpi_heatmap.png")
+    save(fig, "C11_cpi_heatmap.png")
     # rank stability: spearman of era-wise cpi rankings vs overall,
     # restricted to subreddits with >=5 top posts in that era
-    counts = (df.groupby(["subreddit", "era"], observed=True).size()
-                .unstack(fill_value=0))
     overall = piv.mean(axis=1)
     for e in ERAS:
         ok = counts[e] >= 5
@@ -320,7 +318,7 @@ def c14_corr_matrix():
                     fontsize=9.5, color="white" if abs(rho.iloc[i, j]) > 0.55 else "black")
     ax.set_title("What goes with what on top posts? (Spearman rank correlations)")
     fig.colorbar(im, ax=ax, shrink=0.85)
-    save(fig, "C14_corr_matrix.png")
+    save(fig, "C12_corr_matrix.png")
     print(rho.round(3).to_string())
 
 
@@ -339,7 +337,7 @@ def c15_score_vs_comments():
     ax.set(title=f"Do upvotes and comments measure the same success? (ρ = {rho:.2f})",
            xlabel="Post score (upvotes, log)", ylabel="Number of comments (log)")
     ax.legend(frameon=False, fontsize=9, title="Post type", markerscale=3)
-    save(fig, "C15_score_vs_comments.png")
+    save(fig, "C13_score_vs_comments.png")
     # the outliers: posts with more comments than upvotes
     more = df[df["num_comments"] > df["score"]]
     print(f"posts with more comments than upvotes: {len(more)} "
@@ -356,7 +354,7 @@ def c16_ratio_vs_comments():
            xlabel="Number of comments (log scale)",
            ylabel="Upvote ratio")
     fig.colorbar(hb, ax=ax, label="Posts (log count)")
-    save(fig, "C16_ratio_vs_comments.png")
+    save(fig, "C14_ratio_vs_comments.png")
 
 
 def c17_crossposts():
@@ -383,17 +381,16 @@ def c17_crossposts():
     rho = spearmanr(df["score"], df["num_crossposts"]).statistic
     ax.set(title=f"Crossposting tracks virality (ρ = {rho:.2f})",
            xlabel="Post score (upvotes, log)", ylabel="Times crossposted to other subreddits (log)")
-    save(fig, "C17_crossposts.png")
+    save(fig, "C15_crossposts.png")
     print(top[["subreddit", "num_crossposts", "score"]].to_string())
 
 
 # ------------------------------------------------------------- T5 synthesis
 def c18_clusters():
     feats = ["median_cpi", "median_ratio", "median_score", "pct_image", "pct_text"]
-    X = np.log1p(subs[["median_cpi", "median_score"]].values)
-    X = np.column_stack([X, subs[["median_ratio", "pct_image", "pct_text"]].values])
-    Z = StandardScaler().fit_transform(X)
-    best = max(range(3, 6), key=lambda k: silhouette_score(Z, KMeans(k, n_init=10, random_state=0).fit_predict(Z)))
+    from vizutils import profile_features, select_k
+    Z = profile_features(subs)
+    best = select_k(Z)
     km = KMeans(best, n_init=10, random_state=0).fit(Z)
     subs["cluster"] = km.labels_.astype(str)
     print(f"k={best}, silhouette={silhouette_score(Z, km.labels_):.3f}")
@@ -432,7 +429,7 @@ def c18_clusters():
     from vizutils import place_labels
     place_labels(ax, [t for t in ax.texts], x=subs["median_cpi"].values,
                  y=subs["pct_image"].values)
-    save(fig, "C18_clusters.png")
+    save(fig, "C16_clusters.png")
 
 
 def c19_era_composition():
@@ -453,7 +450,7 @@ def c19_era_composition():
            xlabel="Share of the subreddit's top posts (%)")
     ax.set_xlim(0, 100)
     ax.legend(frameon=False, ncol=5, fontsize=9, loc="lower right", title="Creation era")
-    save(fig, "C19_era_composition.png")
+    save(fig, "C17_era_composition.png")
     print(piv["2022-24"].sort_values(ascending=False).head(5).to_string())
     print(piv["2022-24"].sort_values().head(5).to_string())
 

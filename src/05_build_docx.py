@@ -1,9 +1,18 @@
 """DAS732 A1 — Build report.docx from report/report.md (single source of truth).
 
 Parses the constrained Markdown subset used in report.md:
-headings (#/##/###), paragraphs, - bullets, | tables |, > blockquotes,
-![captions](image paths), --- rules, and inline **bold** / *italic* /
-`code` / [text](url). Output: report/report.docx (US Letter, 1in margins).
+  - headings (#/##/###), paragraphs, - bullets, 1. numbered lists
+  - | tables |, > blockquotes, ![captions](image paths), --- rules
+  - inline **bold** / *italic* / `code` / [text](url)
+  - hard-wrapped paragraphs: consecutive plain lines are joined into a
+    single paragraph (CommonMark behaviour)
+
+Not supported (report.md deliberately avoids these): nested lists, code
+blocks, footnotes, multi-level tables, HTML. If you need them, extend
+`build()` — the report is rendered exclusively through this subset, so the
+DOCX output is faithful for everything report.md contains.
+
+Output: report/report.docx (US Letter, 1in margins).
 """
 import os
 import re
@@ -18,6 +27,8 @@ OUT = os.path.join(HERE, "..", "report", "report.docx")
 IMG_WIDTH = Inches(6.5)
 
 INLINE = re.compile(r"(\*\*.+?\*\*|\*[^*]+?\*|`[^`]+?`|\[[^\]]+?\]\([^)]+?\))")
+NUM_LIST = re.compile(r"^(\d+)\.\s+(.*)$")
+RULE = re.compile(r"^-{3,}\s*$")
 
 
 def add_inline(par, text, base_italic=False):
@@ -40,7 +51,15 @@ def add_inline(par, text, base_italic=False):
             r.italic = True
 
 
-def main():
+def _flush_paragraph(doc, buf, style=None, italic=False):
+    if not buf:
+        return
+    p = doc.add_paragraph(style=style)
+    add_inline(p, " ".join(buf), base_italic=italic)
+    buf.clear()
+
+
+def build(md_path: str, out_path: str) -> Document:
     doc = Document()
     for sec in doc.sections:
         sec.left_margin = sec.right_margin = Inches(1)
@@ -50,15 +69,20 @@ def main():
     style.font.size = Pt(11)
     style.paragraph_format.space_after = Pt(6)
 
-    lines = open(MD, encoding="utf-8").read().splitlines()
-    i, first_h1 = 0, True
+    lines = open(md_path, encoding="utf-8").read().splitlines()
+    i, first_h1, buf = 0, True, []
+
+    def flush():
+        _flush_paragraph(doc, buf)
+
     while i < len(lines):
         line = lines[i]
 
         if line.startswith("![") and "](" in line:
+            flush()
             cap, path = line[2:].split("](", 1)
             path = path.rstrip(")")
-            img_path = os.path.normpath(os.path.join(os.path.dirname(MD), path))
+            img_path = os.path.normpath(os.path.join(os.path.dirname(md_path), path))
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             p.add_run().add_picture(img_path, width=IMG_WIDTH)
@@ -74,6 +98,7 @@ def main():
             continue
 
         if line.startswith("|"):
+            flush()
             rows = []
             while i < len(lines) and lines[i].startswith("|"):
                 cells = [c.strip() for c in lines[i].strip("|").split("|")]
@@ -95,37 +120,52 @@ def main():
             continue
 
         if line.startswith("#### "):
-            doc.add_heading(line[5:], level=3); i += 1; continue
+            flush(); doc.add_heading(line[5:], level=3); i += 1; continue
         if line.startswith("### "):
-            doc.add_heading(line[4:], level=2); i += 1; continue
+            flush(); doc.add_heading(line[4:], level=2); i += 1; continue
         if line.startswith("## "):
-            doc.add_heading(line[3:], level=1); i += 1; continue
+            flush(); doc.add_heading(line[3:], level=1); i += 1; continue
         if line.startswith("# "):
-            if first_h1:
-                h = doc.add_heading(line[2:], level=0); first_h1 = False
-            else:
-                doc.add_heading(line[2:], level=1)
+            flush()
+            doc.add_heading(line[2:], level=0 if first_h1 else 1)
+            first_h1 = False
             i += 1; continue
 
         if line.startswith("> "):
+            flush()
             p = doc.add_paragraph()
             p.paragraph_format.left_indent = Inches(0.35)
             add_inline(p, line[2:], base_italic=True)
             i += 1; continue
 
         if line.startswith("- "):
+            flush()
             p = doc.add_paragraph(style="List Bullet")
             add_inline(p, line[2:])
             i += 1; continue
 
-        if re.fullmatch(r"-{3,}", line.strip()) or not line.strip():
+        m = NUM_LIST.match(line)
+        if m:
+            flush()
+            p = doc.add_paragraph(style="List Number")
+            add_inline(p, m.group(2))
             i += 1; continue
 
-        p = doc.add_paragraph()
-        add_inline(p, line)
+        if RULE.match(line) or not line.strip():
+            flush()
+            i += 1; continue
+
+        # plain text: buffer so hard-wrapped lines join into one paragraph
+        buf.append(line.strip())
         i += 1
 
-    doc.save(OUT)
+    flush()
+    doc.save(out_path)
+    return doc
+
+
+def main():
+    build(MD, OUT)
     print(f"wrote {OUT}")
 
 

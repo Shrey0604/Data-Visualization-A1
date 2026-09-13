@@ -1,12 +1,25 @@
-"""Shared visualization utilities for DAS732 A1 figure scripts.
+"""Shared analysis + visualization utilities for DAS732 A1.
 
-audit_overlaps: render-time collision audit for text artists, legends and
-axis labels (the same discipline applied to report figures and exploration
-candidates).
+Analysis (used by figure scripts, src/06_k_selection.py, and tests):
+  profile_features   - community-level feature matrix for the profile map
+  select_k           - deterministic k selection with the documented rule
+  k_selection_table  - silhouette/size table for k = config.K_RANGE
+  k_stability_ari    - seed-stability of a k-means solution (adjusted Rand)
+  mask_small_groups  - hide heatmap cells backed by fewer than n posts
 
-place_labels: automatic de-overlapping of point labels via adjustText.
+Visualization:
+  audit_overlaps     - render-time collision audit for text/legend artists
+  place_labels       - automatic de-overlapping of point labels (adjustText)
 """
 import matplotlib as mpl
+import numpy as np
+import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn.metrics import adjusted_rand_score, silhouette_score
+from sklearn.preprocessing import StandardScaler
+
+from config import (K_RANGE, MAX_SMALL_PROFILES, MIN_PROFILE_SIZE, N_INIT,
+                    RANDOM_STATE, STABILITY_SEEDS)
 
 try:
     from adjustText import adjust_text
@@ -15,6 +28,68 @@ except ImportError:
     HAVE_ADJUST = False
 
 
+# ------------------------------------------------------------------ analysis
+def profile_features(subs: pd.DataFrame) -> np.ndarray:
+    """Feature matrix for the profile map: log discussion intensity, log
+    median score, median upvote ratio, image share, text share."""
+    X = np.column_stack([
+        np.log1p(subs[["median_cpi", "median_score"]].values),
+        subs[["median_ratio", "pct_image", "pct_text"]].values,
+    ])
+    return StandardScaler().fit_transform(X)
+
+
+def k_selection_table(Z: np.ndarray) -> pd.DataFrame:
+    """Silhouette + cluster-size table for every k in config.K_RANGE."""
+    rows = []
+    for k in K_RANGE:
+        labels = KMeans(k, n_init=N_INIT, random_state=RANDOM_STATE).fit_predict(Z)
+        sizes = np.bincount(labels)
+        rows.append({"k": k,
+                     "silhouette": silhouette_score(Z, labels),
+                     "sizes": sorted(sizes.tolist(), reverse=True),
+                     "n_small": int((sizes < MIN_PROFILE_SIZE).sum())})
+    return pd.DataFrame(rows)
+
+
+def select_k(Z: np.ndarray) -> int:
+    """Deterministic k selection (report Appendix C rule).
+    Among k = 2..8, keep the partitions in which all but at most one cluster
+    contain at least MIN_PROFILE_SIZE communities (the allowance covers the
+    single structural outlier, AskReddit), then take the highest silhouette.
+    This yields k = 5 on the current data: k = 6 splits the advice & Q&A
+    profile into fragments of 5 and 6, which the rule disallows.
+    """
+    table = k_selection_table(Z)
+    eligible = table[table["n_small"] <= MAX_SMALL_PROFILES]
+    return int(eligible.loc[eligible["silhouette"].idxmax(), "k"])
+
+
+def k_stability_ari(Z: np.ndarray, k: int) -> float:
+    """Mean adjusted Rand index of the k-means solution at `k` across
+    STABILITY_SEEDS, comparing seeds 1..N against the seed-0 reference
+    (i.e. N-1 comparisons, as reported in Appendix C)."""
+    base = KMeans(k, n_init=N_INIT, random_state=RANDOM_STATE).fit_predict(Z)
+    aris = [adjusted_rand_score(base, KMeans(k, n_init=N_INIT,
+                                             random_state=s).fit_predict(Z))
+            for s in list(STABILITY_SEEDS)[1:]]
+    return float(np.mean(aris))
+
+
+def mask_small_groups(values: pd.DataFrame, counts: pd.DataFrame,
+                      min_n: int = 5) -> pd.DataFrame:
+    """Blank out heatmap cells backed by fewer than `min_n` observations.
+
+    `values` and `counts` share the same index/columns. Cells with
+    counts < min_n (including missing counts) become NaN so the figure shows
+    them as blank, matching its own legend."""
+    out = values.copy()
+    counts = counts.reindex(index=values.index, columns=values.columns)
+    out[counts.isna() | (counts < min_n)] = np.nan
+    return out
+
+
+# ------------------------------------------------------------- visualization
 def audit_overlaps(fig, name=""):
     """Return a list of layout-issue strings for a rendered figure.
 

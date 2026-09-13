@@ -25,10 +25,8 @@ import pandas as pd
 from matplotlib.lines import Line2D
 from scipy.stats import spearmanr
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
-from sklearn.preprocessing import StandardScaler
 
-from vizutils import audit_overlaps, place_labels
+from vizutils import audit_overlaps, mask_small_groups, place_labels, profile_features, select_k
 
 HERE = os.path.dirname(__file__)
 PROC = os.path.join(HERE, "..", "data", "processed")
@@ -37,12 +35,8 @@ EXTRAS = os.path.join(IMG, "extras")
 CAND = os.path.join(HERE, "..", "exploration", "candidates")
 os.makedirs(EXTRAS, exist_ok=True)
 
-OI = {"blue": "#0072B2", "orange": "#E69F00", "green": "#009E73",
-      "verm": "#D55E00", "purple": "#CC79A7", "sky": "#56B4E9",
-      "grey": "#7F7F7F"}
-PT_COLORS = {"image": OI["blue"], "link": OI["orange"],
-             "text": OI["green"], "video": OI["verm"]}
-ERAS = ["<=2015", "2016-17", "2018-19", "2020-21", "2022-24"]
+# palettes, era labels and era colours come from the shared config
+from config import ERA_COLORS, ERA_LABELS as ERAS, OI, PT_COLORS
 
 mpl.rcParams.update({
     "figure.dpi": 100, "savefig.dpi": 200, "font.size": 10.5,
@@ -249,11 +243,16 @@ def fig07_bubble():
 
 
 def fig08_style_persistence():
+    counts = (df.groupby(["subreddit", "era"], observed=True).size()
+                .unstack(fill_value=0))
     piv = (df.groupby(["subreddit", "era"], observed=True)["cpi"]
              .median().unstack())
     piv = piv.reindex(columns=[e for e in ERAS if e in piv.columns])
     order = subs.sort_values("median_cpi", ascending=False)["subreddit"]
     piv = piv.loc[order]
+    # blank out cells backed by fewer than 5 top posts — the legend promises
+    # "blank = fewer than 5 top posts", so the data must honour it
+    piv = mask_small_groups(piv, counts, min_n=5)
     piv1k = piv * 1000
     logv = np.log10(piv1k)
     fig, ax = plt.subplots(figsize=(8.8, 13.2))
@@ -371,12 +370,8 @@ def fig12_contested_discussed():
 # ------------------------------------------------------------------ synthesis
 def fig13_profiles():
     feats = ["median_cpi", "median_ratio", "median_score", "pct_image", "pct_text"]
-    X = np.column_stack([np.log1p(subs[["median_cpi", "median_score"]].values),
-                         subs[["median_ratio", "pct_image", "pct_text"]].values])
-    Z = StandardScaler().fit_transform(X)
-    best = max(range(3, 6),
-               key=lambda k: silhouette_score(
-                   Z, KMeans(k, n_init=10, random_state=0).fit_predict(Z)))
+    Z = profile_features(subs)
+    best = select_k(Z)
     km = KMeans(best, n_init=10, random_state=0).fit(Z)
     subs["cluster"] = km.labels_.astype(str)
 
@@ -452,8 +447,8 @@ def fig14_age_of_lists():
 
 
 def copy_extras():
-    for c in ["C09_ratio_boxes.png", "C14_corr_matrix.png",
-              "C17_crossposts.png"]:
+    for c in ["C08_ratio_boxes.png", "C12_corr_matrix.png",
+              "C15_crossposts.png"]:
         src = os.path.join(CAND, c)
         if os.path.exists(src):
             shutil.copy(src, os.path.join(EXTRAS, c))

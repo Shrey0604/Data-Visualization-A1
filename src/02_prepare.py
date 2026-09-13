@@ -22,6 +22,8 @@ import os
 import numpy as np
 import pandas as pd
 
+from config import ERA_BINS, ERA_LABELS, classify_domain
+
 HERE = os.path.dirname(__file__)
 RAW = os.path.join(HERE, "..", "data", "raw")
 OUT = os.path.join(HERE, "..", "data", "processed")
@@ -29,23 +31,6 @@ OUT = os.path.join(HERE, "..", "data", "processed")
 DROP_COLS = ["num_awards", "crosspost_subreddits", "is_bot",
              "is_megathread", "body"]
 
-
-def classify_domain(d: str) -> str:
-    """Coarse platform classifier for the link-hosting migration story."""
-    if pd.isna(d):
-        return "no link"
-    d = d.lower()
-    if d.startswith("self."):
-        return "self post"
-    if "redd.it" in d:
-        return "reddit-native"
-    if "imgur" in d:
-        return "imgur"
-    if "youtu" in d:
-        return "youtube"
-    if any(h in d for h in ("gfycat", "streamable", "vimeo", "twitch")):
-        return "other video hosts"
-    return "other external"
 
 
 def load_and_clean() -> pd.DataFrame:
@@ -69,9 +54,7 @@ def load_and_clean() -> pd.DataFrame:
     df["year"] = df["created_dt"].dt.year.astype(int)
     df["month"] = df["created_dt"].dt.month.astype(int)
     df["hour_utc"] = df["created_dt"].dt.hour.astype(int)
-    df["era"] = pd.cut(df["year"], [2010, 2015, 2017, 2019, 2021, 2024],
-                       labels=["<=2015", "2016-17", "2018-19",
-                               "2020-21", "2022-24"])
+    df["era"] = pd.cut(df["year"], bins=ERA_BINS, labels=ERA_LABELS)
     df["title_len"] = df["title"].str.len().astype(int)
     df["is_question"] = df["title"].str.strip().str.endswith("?")
     df["cpi"] = df["num_comments"] / df["score"].clip(lower=1)
@@ -83,11 +66,11 @@ def subreddit_aggregates(df: pd.DataFrame) -> pd.DataFrame:
     """Community-level table: one row per subreddit, medians for skewed vars."""
     agg = (df.groupby("subreddit")
              .agg(posts=("id", "count"),
-                  median_score=("score", "median"),
-                  p90_score=("score", lambda s: s.quantile(0.9)),
-                  median_comments=("num_comments", "median"),
-                  median_ratio=("upvote_ratio", "median"),
-                  median_cpi=("cpi", "median"),
+                 median_score=("score", "median"),
+                 p90_score=("score", lambda s: s.quantile(0.9)),
+                 median_comments=("num_comments", "median"),
+                 median_ratio=("upvote_ratio", "median"),
+                 median_cpi=("cpi", "median"),
                   median_crossposts=("num_crossposts", "median"),
                   median_title_len=("title_len", "median"),
                   subscribers=("subscribers", "first"),
