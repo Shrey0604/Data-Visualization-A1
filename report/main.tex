@@ -12,7 +12,7 @@
 \usepackage[hidelinks]{hyperref}
 
 
-\title{Visual Exploration of Reddit's Top 50 Subreddits\\
+\title{Visual Exploration of Reddit's Top Communities\\
 How Engagement, Content Form, and Platform Hosting Changed from 2011 to 2024}
 
 \author{
@@ -47,7 +47,7 @@ We merge 50 raw files, parse a separate Excel-style date format used only by Ask
 We report CPI as comments per 1,000 upvotes. Scores and comments are right-skewed, so comparisons use medians and figures use log scales; ranking communities by mean instead of median CPI gives a rank correlation of 0.99, so our comparisons are not artifacts of the aggregation choice.
 
 \section{Visualization Tasks}
-Following the task terminology of Schulz et al.\ \cite{schulz} (overview, trends, search, compare), we split the central question into three cohesive task sets, one per author. Task Set 1 covers data preparation, corpus overview, and synthesis. Task Set 2 compares communities through discussion intensity, fingerprints, engagement maps, and style persistence. Task Set 3 traces content and hosting migration, then examines relationships among score, comments, and consensus.
+Following the task terminology of Schulz et al.\ \cite{schulz} (overview, trends, search, compare), we split the central question into three cohesive task sets aligned with the principal responsibilities of the three team members. Task Set 1, led by Sidhanth Prabhu, covers data preparation, corpus overview, and synthesis, including the community-profile analysis. Task Set 2, led by Shrey Modi, compares communities through discussion intensity, content geometry, engagement fingerprints, engagement maps, and style persistence. Task Set 3, led by Parthsarathi Samanta, traces content and hosting migration, then examines relationships among score, comments, and consensus; it also includes external verification of platform-launch dates and implementation of the Tableau dashboard.
 
 \section{Corpus Overview and Community Comparison}
 
@@ -129,7 +129,13 @@ This work observes only all-time top posts, not ordinary Reddit activity, so no 
 }
 
 \section*{Author Contributions}
-Sidhanth Prabhu led data preparation, corpus overview (Figures 1--3), and synthesis (Figures 13--14, including the k-selection analysis). Shrey Modi led cross-community comparison and Figures 4--8. Parthsarathi Samanta led temporal and relationship analysis, Figures 9--12, and external verification of the platform-launch dates. All members jointly selected the research question and tasks, reviewed candidate figures, developed the narrative, and edited the report.
+\textbf{Sidhanth Prabhu} served as team lead and led the dataset description, data preparation, preprocessing, and feature-engineering pipeline. His work included merging the 50 subreddit CSV files, handling the dual-format date parsing, defining derived variables and era bins, and establishing the preprocessing and outlier-handling decisions. He led the corpus overview analysis and Figures 1--3, as well as the synthesis and community-profile analysis in Figures 13--14, including the $k$-selection and stability analysis. He also contributed to structuring the report and validating the numerical results against the processed data.
+
+\textbf{Shrey Modi} led the cross-community comparison analysis. His work included the discussion-intensity spectrum, content-type geometry, engagement fingerprint heatmap, engagement map, and subreddit-by-era style-persistence analysis (Figures 4--8). He generated and evaluated candidate visualizations, tuned the final figures, and validated the reported medians and era-level rank-stability statistics. He also contributed to interpreting the consumption-versus-discussion spectrum, scale--intensity relationship, and persistence of community engagement styles.
+
+\textbf{Parthsarathi Samanta} led the temporal and relationship analysis in Figures 9--12, covering content-type evolution, hosting-platform migration, score-versus-comments relationships, and upvote-ratio relationships. He developed and validated the associated statistical calculations, including the Spearman correlations, and externally verified the Reddit platform-launch timeline used in the analysis. He also independently built and demonstrated the Tableau \emph{Reddit Engagement Explorer} dashboard, including the engagement map, engagement spectrum, media-shift, and score-versus-comments sheets and their linked era, post-type, and subreddit filters.
+
+\textbf{Joint contributions:} All three members jointly formulated the research question and visualization tasks, reviewed candidate figures, discussed and synthesized the findings, and edited the final report.
 
 \begin{thebibliography}{00}
 \bibitem{kaggle} S. Kanchan, Reddit Top Posts 50-Subreddit Analysis 2011--2024, Kaggle dataset, 2024. [Online]. Available: \url{https://www.kaggle.com/datasets/sachinkanchan92/reddit-top-posts-50-subreddit-analysis-2011-2024}
